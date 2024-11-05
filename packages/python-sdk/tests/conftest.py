@@ -1,3 +1,6 @@
+import asyncio
+import time
+
 import pytest
 import pytest_asyncio
 import os
@@ -26,6 +29,7 @@ def sandbox(template, debug):
                 warning(
                     "Failed to kill sandbox — this is expected if the test runs with local envd."
                 )
+        time.sleep(5)
 
 
 @pytest_asyncio.fixture
@@ -42,6 +46,7 @@ async def async_sandbox(template, debug):
                 warning(
                     "Failed to kill sandbox — this is expected if the test runs with local envd."
                 )
+        await asyncio.sleep(5)
 
 
 @pytest.fixture
