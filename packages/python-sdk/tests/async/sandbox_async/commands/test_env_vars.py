@@ -3,12 +3,14 @@ import pytest
 from e2b import AsyncSandbox
 
 
+@pytest.mark.skip("Old envd")
 async def test_command_envs(async_sandbox: AsyncSandbox):
     cmd = await async_sandbox.commands.run("echo $FOO", envs={"FOO": "bar"})
     assert cmd.stdout.strip() == "bar"
 
 
 @pytest.mark.skip_debug()
+@pytest.mark.skip("Old envd")
 async def test_sandbox_envs(template: str):
     try:
         sbx = await AsyncSandbox.create(template, envs={"FOO": "bar"})

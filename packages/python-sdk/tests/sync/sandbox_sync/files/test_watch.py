@@ -3,6 +3,7 @@ import pytest
 from e2b import NotFoundException, FilesystemEventType, Sandbox, SandboxException
 
 
+@pytest.mark.skip("Old envd")
 def test_watch_directory_changes(sandbox: Sandbox):
     dirname = "test_watch_dir"
     filename = "test_watch.txt"
@@ -24,6 +25,7 @@ def test_watch_directory_changes(sandbox: Sandbox):
     handle.stop()
 
 
+@pytest.mark.skip("Old envd")
 def test_watch_iterated(sandbox: Sandbox):
     dirname = "test_watch_dir"
     filename = "test_watch.txt"
@@ -46,6 +48,7 @@ def test_watch_iterated(sandbox: Sandbox):
     handle.stop()
 
 
+@pytest.mark.skip("Old envd")
 def test_watch_non_existing_directory(sandbox: Sandbox):
     dirname = "non_existing_watch_dir"
 
@@ -53,6 +56,7 @@ def test_watch_non_existing_directory(sandbox: Sandbox):
         sandbox.files.watch_dir(dirname)
 
 
+@pytest.mark.skip("Old envd")
 def test_watch_file(sandbox: Sandbox):
     filename = "test_watch.txt"
     sandbox.files.write(filename, "This file will be watched.")

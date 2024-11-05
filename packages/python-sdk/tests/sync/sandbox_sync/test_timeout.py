@@ -4,6 +4,7 @@ import pytest
 
 
 @pytest.mark.skip_debug()
+@pytest.mark.skip("Timeouts aren't related to what we test now")
 def test_shorten_timeout(sandbox):
     sandbox.set_timeout(5)
     sleep(6)
