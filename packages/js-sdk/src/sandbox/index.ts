@@ -105,9 +105,8 @@ export class Sandbox extends SandboxApi {
 
     this.sandboxId = opts.sandboxId
     this.connectionConfig = new ConnectionConfig(opts)
-    this.envdApiUrl = `${
-      this.connectionConfig.debug ? 'http' : 'https'
-    }://${this.getHost(this.envdPort)}`
+    this.envdApiUrl = `${this.connectionConfig.debug ? 'http' : 'https'
+      }://${this.getHost(this.envdPort)}`
 
     const rpcTransport = createConnectTransport({
       baseUrl: this.envdApiUrl,
@@ -180,10 +179,10 @@ export class Sandbox extends SandboxApi {
     const sandboxId = config.debug
       ? 'debug_sandbox_id'
       : await this.createSandbox(
-          template,
-          sandboxOpts?.timeoutMs ?? this.defaultSandboxTimeoutMs,
-          sandboxOpts
-        )
+        template,
+        sandboxOpts?.timeoutMs ?? this.defaultSandboxTimeoutMs,
+        sandboxOpts
+      )
 
     const sbx = new this({ sandboxId, ...config }) as InstanceType<S>
     return sbx
@@ -216,6 +215,27 @@ export class Sandbox extends SandboxApi {
 
     const sbx = new this({ sandboxId, ...config }) as InstanceType<S>
     return sbx
+  }
+
+  /**
+   * Resume the sandbox.
+   * 
+   * The **default sandbox timeout of 300 seconds** ({@link Sandbox.defaultSandboxTimeoutMs}) will be used for the resumed sandbox.
+   * If you pass a custom timeout in the `opts` parameter via {@link SandboxOpts.timeoutMs} property, it will be used instead.
+   *
+   * @param sandboxId sandbox ID.
+   * @param opts connection options.
+   *
+   * @returns a running sandbox instance.
+   */
+  static async resume<S extends typeof Sandbox>(
+    this: S,
+    sandboxId: string,
+    opts?: Omit<SandboxOpts, 'metadata' | 'envs'>
+  ): Promise<InstanceType<S>> {
+    await Sandbox.resumeSandbox(sandboxId, opts?.timeoutMs ?? this.defaultSandboxTimeoutMs, opts)
+
+    return await this.connect(sandboxId, opts)
   }
 
   /**
@@ -315,6 +335,19 @@ export class Sandbox extends SandboxApi {
     }
 
     await Sandbox.kill(this.sandboxId, { ...this.connectionConfig, ...opts })
+  }
+
+  /**
+   * Pause the sandbox.
+   *
+   * @param opts connection options.
+   *
+   * @returns sandbox ID that can be used to resume the sandbox.
+   */
+  async pause(opts?: Pick<SandboxOpts, 'requestTimeoutMs'>): Promise<string> {
+    await Sandbox.pauseSandbox(this.sandboxId, { ...this.connectionConfig, ...opts })
+
+    return this.sandboxId
   }
 
   /**
