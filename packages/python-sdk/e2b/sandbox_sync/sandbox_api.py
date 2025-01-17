@@ -1,3 +1,5 @@
+import urllib.parse
+
 from httpx import HTTPTransport
 from typing import Optional, Dict, List
 from packaging.version import Version
@@ -21,7 +23,7 @@ class SandboxApi(SandboxApiBase):
     def list(
         cls,
         api_key: Optional[str] = None,
-        filters: Optional[dict[str, str]] = None,
+        filters: Optional[Dict[str, str]] = None,
         domain: Optional[str] = None,
         debug: Optional[bool] = None,
         request_timeout: Optional[float] = None,
@@ -45,12 +47,17 @@ class SandboxApi(SandboxApiBase):
         )
 
         # Convert filters to the format expected by the API
-        filters = [":".join([k, v]) for k, v in (filters or {}).items()]
+        query = None
+        if filters:
+            filters = {
+                urllib.parse.quote(k): urllib.parse.quote(v) for k, v in filters.items()
+            }
+            query = urllib.parse.urlencode(filters)
 
         with ApiClient(
             config, transport=HTTPTransport(limits=SandboxApiBase._limits)
         ) as api_client:
-            res = get_sandboxes.sync_detailed(client=api_client, filter_=filters)
+            res = get_sandboxes.sync_detailed(client=api_client, query=query)
 
             if res.status_code >= 300:
                 raise handle_api_exception(res)

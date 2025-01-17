@@ -1,3 +1,4 @@
+import urllib.parse
 from typing import Optional, Dict, List
 from packaging.version import Version
 
@@ -20,7 +21,7 @@ class SandboxApi(SandboxApiBase):
     async def list(
         cls,
         api_key: Optional[str] = None,
-        filters: Optional[dict[str, str]] = None,
+        filters: Optional[Dict[str, str]] = None,
         domain: Optional[str] = None,
         debug: Optional[bool] = None,
         request_timeout: Optional[float] = None,
@@ -43,36 +44,40 @@ class SandboxApi(SandboxApiBase):
             request_timeout=request_timeout,
         )
 
-        # Convert filters to the format expected by the API
-        filters = [":".join([k, v]) for k, v in (filters or {}).items()]
+        query = None
+        if filters:
+            filters = {
+                urllib.parse.quote(k): urllib.parse.quote(v) for k, v in filters.items()
+            }
+            query = urllib.parse.urlencode(filters)
 
         async with AsyncApiClient(config) as api_client:
             res = await get_sandboxes.asyncio_detailed(
                 client=api_client,
-                filter_=filters,
+                query=query,
             )
 
-            if res.status_code >= 300:
-                raise handle_api_exception(res)
+        if res.status_code >= 300:
+            raise handle_api_exception(res)
 
-            if res.parsed is None:
-                return []
+        if res.parsed is None:
+            return []
 
-            return [
-                SandboxInfo(
-                    sandbox_id=SandboxApi._get_sandbox_id(
-                        sandbox.sandbox_id,
-                        sandbox.client_id,
-                    ),
-                    template_id=sandbox.template_id,
-                    name=sandbox.alias if isinstance(sandbox.alias, str) else None,
-                    metadata=(
-                        sandbox.metadata if isinstance(sandbox.metadata, dict) else {}
-                    ),
-                    started_at=sandbox.started_at,
-                )
-                for sandbox in res.parsed
-            ]
+        return [
+            SandboxInfo(
+                sandbox_id=SandboxApi._get_sandbox_id(
+                    sandbox.sandbox_id,
+                    sandbox.client_id,
+                ),
+                template_id=sandbox.template_id,
+                name=sandbox.alias if isinstance(sandbox.alias, str) else None,
+                metadata=(
+                    sandbox.metadata if isinstance(sandbox.metadata, dict) else {}
+                ),
+                started_at=sandbox.started_at,
+            )
+            for sandbox in res.parsed
+        ]
 
     @classmethod
     async def _cls_kill(
