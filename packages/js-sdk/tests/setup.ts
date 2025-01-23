@@ -1,7 +1,7 @@
 import { Sandbox } from '../src'
 import { test as base } from 'vitest'
 
-export const template = 'base'
+export const template = 'fq7u0hwuq4wp1fsr1lnr'
 
 interface SandboxFixture {
   sandbox: Sandbox
