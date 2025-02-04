@@ -64,9 +64,7 @@ async function getXmlData(url: string): Promise<Sitemap> {
 
   return parser.parse(text) as Sitemap
 }
-async function getSitemap(
-  site: Site,
-): Promise<MetadataRoute.Sitemap> {
+async function getSitemap(site: Site): Promise<MetadataRoute.Sitemap> {
   const data = await getXmlData(site.sitemapUrl)
 
   if (!data) {
@@ -97,16 +95,14 @@ async function getSitemap(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let mergedSitemap: MetadataRoute.Sitemap = []
 
-
-  const dashboardPath = path.join(process.cwd(), 'src', 'app', '(dashboard)', 'dashboard')
-  const dashboardPages = getPageForSitemap(dashboardPath, 'https://e2b.dev/dashboard/', 0.5)
-
   const docsDirectory = path.join(process.cwd(), 'src', 'app', '(docs)', 'docs')
-  const docsPages = getPageForSitemap(docsDirectory, 'https://e2b.dev/docs/', 0.5).filter(
-    (page) => !page.url.startsWith('https://e2b.dev/docs/api/'),
-  )
+  const docsPages = getPageForSitemap(
+    docsDirectory,
+    'https://e2b.dev/docs/',
+    0.5
+  ).filter((page) => !page.url.startsWith('https://e2b.dev/docs/api/'))
 
-  mergedSitemap = mergedSitemap.concat(dashboardPages, docsPages)
+  mergedSitemap = mergedSitemap.concat(docsPages)
 
   for (const site of sites) {
     const urls = await getSitemap(site)
