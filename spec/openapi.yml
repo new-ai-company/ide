@@ -138,6 +138,13 @@ components:
         type: string
         description: Metadata of the sandbox
 
+    SandboxState:
+      type: string
+      description: State of the sandbox
+      enum:
+        - running
+        - paused
+
     EnvVars:
       additionalProperties:
         type: string
@@ -220,7 +227,7 @@ components:
           type: string
           description: Version of the envd running in the sandbox
 
-    RunningSandbox:
+    ListedSandbox:
       required:
         - templateID
         - sandboxID
@@ -229,6 +236,7 @@ components:
         - cpuCount
         - memoryMB
         - endAt
+        - state
       properties:
         templateID:
           type: string
@@ -256,6 +264,8 @@ components:
           $ref: "#/components/schemas/MemoryMB"
         metadata:
           $ref: "#/components/schemas/SandboxMetadata"
+        state:
+          $ref: "#/components/schemas/SandboxState"
 
     NewSandbox:
       required:
@@ -445,12 +455,12 @@ components:
           type: array
           description: List of sandboxes running on the node
           items:
-            $ref: "#/components/schemas/RunningSandbox"
+            $ref: "#/components/schemas/ListedSandbox"
         cachedBuilds:
-          type: array
-          description: List of cached builds id on the node
-          items:
-            type: string
+            type: array
+            description: List of cached builds id on the node
+            items:
+                type: string
 
 
     Error:
@@ -504,7 +514,7 @@ paths:
 
   /sandboxes:
     get:
-      description: List all running sandboxes
+      description: List all sandboxes
       tags: [sandboxes]
       security:
         - ApiKeyAuth: []
@@ -515,6 +525,16 @@ paths:
           required: false
           schema:
             type: string
+        - name: state
+          in: query
+          description: Filter sandboxes by one or more states
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/SandboxState"
+          style: form
+          explode: false
       responses:
         "200":
           description: Successfully returned all running sandboxes
@@ -524,7 +544,7 @@ paths:
                 type: array
                 items:
                   allOf:
-                    - $ref: "#/components/schemas/RunningSandbox"
+                    - $ref: "#/components/schemas/ListedSandbox"
         "401":
           $ref: "#/components/responses/401"
         "400":
@@ -632,7 +652,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RunningSandbox"
+                $ref: "#/components/schemas/ListedSandbox"
         "404":
           $ref: "#/components/responses/404"
         "401":

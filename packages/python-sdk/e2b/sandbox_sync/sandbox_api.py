@@ -16,6 +16,8 @@ from e2b.api.client.models import (
     PostSandboxesSandboxIDTimeoutBody,
     ResumedSandbox,
 )
+from e2b.api.client.models import SandboxState
+from e2b.api.client.types import UNSET, Unset
 from e2b.connection_config import ConnectionConfig
 from e2b.exceptions import NotFoundException, TemplateException
 from e2b.sandbox.sandbox_api import SandboxApiBase, SandboxInfo, SandboxMetrics
@@ -29,6 +31,7 @@ class SandboxApi(SandboxApiBase):
         cls,
         api_key: Optional[str] = None,
         filters: Optional[Dict[str, str]] = None,
+        state: Optional[list[SandboxState]] = None,
         domain: Optional[str] = None,
         debug: Optional[bool] = None,
         request_timeout: Optional[float] = None,
@@ -38,6 +41,7 @@ class SandboxApi(SandboxApiBase):
 
         :param api_key: API key to use for authentication, defaults to `E2B_API_KEY` environment variable
         :param filters: Filter the list of sandboxes by metadata, e.g. `{"key": "value"}`, if there are multiple filters they are combined with AND.
+        :param state: Filter the list of sandboxes by state, e.g. `['paused', 'running']`
         :param domain: Domain to use for the request, only relevant for self-hosted environments
         :param debug: Enable debug mode, all requested are then sent to localhost
         :param request_timeout: Timeout for the request in **seconds**
@@ -52,7 +56,7 @@ class SandboxApi(SandboxApiBase):
         )
 
         # Convert filters to the format expected by the API
-        query = None
+        query = UNSET
         if filters:
             filters = {
                 urllib.parse.quote(k): urllib.parse.quote(v) for k, v in filters.items()
@@ -62,7 +66,11 @@ class SandboxApi(SandboxApiBase):
         with ApiClient(
             config, transport=HTTPTransport(limits=SandboxApiBase._limits)
         ) as api_client:
-            res = get_sandboxes.sync_detailed(client=api_client, query=query)
+            res = get_sandboxes.sync_detailed(
+                client=api_client,
+                query=query,
+                state=state or UNSET,
+            )
 
             if res.status_code >= 300:
                 raise handle_api_exception(res)
@@ -82,6 +90,7 @@ class SandboxApi(SandboxApiBase):
                         sandbox.metadata if isinstance(sandbox.metadata, dict) else {}
                     ),
                     started_at=sandbox.started_at,
+                    state=sandbox.state,
                 )
                 for sandbox in res.parsed
             ]
